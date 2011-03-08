@@ -1,0 +1,55 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.elasticsearch.plugins</groupId>
+  <artifactId>es-hibernate-connector</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Hibernate to ElasticSearch Connector</name>
+  <description>Make your Hibernate Search more Elastic !</description>
+	<repositories>
+		<repository>
+			<id>sonatype-releases</id>
+			<name>Miroir Sonatype</name>
+			<layout>default</layout>
+			<url>https://oss.sonatype.org/content/repositories/releases/</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+  <dependencies>
+    <dependency>
+      <groupId>org.elasticsearch</groupId>
+      <artifactId>elasticsearch</artifactId>
+      <version>0.15.1</version>
+    </dependency>
+	<dependency>
+		<groupId>log4j</groupId>
+		<artifactId>log4j</artifactId>
+		<version>1.2.13</version>
+		<scope>provided</scope>
+	</dependency>
+	<dependency>
+		<groupId>commons-logging</groupId>
+		<artifactId>commons-logging</artifactId>
+		<version>1.1.1</version>
+	</dependency>
+	<dependency>
+	  <groupId>commons-beanutils</groupId>
+	  <artifactId>commons-beanutils</artifactId>
+	  <version>1.8.3</version>
+	</dependency>
+    <!-- dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-search</artifactId>
+      <version>3.3.0.Final</version>
+      <scope>compile</scope>
+    </dependency-->
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>4.4</version>
+		<scope>test</scope>
+	</dependency>
+    
+  </dependencies>
+</project>
