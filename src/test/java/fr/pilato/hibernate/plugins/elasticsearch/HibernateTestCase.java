@@ -1,4 +1,4 @@
-package org.elasticsearch.orm.hibernate;
+package fr.pilato.hibernate.plugins.elasticsearch;
 
 import static org.elasticsearch.index.query.xcontent.QueryBuilders.termQuery;
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
@@ -12,9 +12,6 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.orm.hibernate.testcase1.ChildEntity;
-import org.elasticsearch.orm.hibernate.testcase1.EntityMaker;
-import org.elasticsearch.orm.hibernate.testcase1.SimpleEntity;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -23,6 +20,10 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import fr.pilato.hibernate.plugins.elasticsearch.testcase1.ChildEntity;
+import fr.pilato.hibernate.plugins.elasticsearch.testcase1.EntityMaker;
+import fr.pilato.hibernate.plugins.elasticsearch.testcase1.SimpleEntity;
 
 public class HibernateTestCase {
 
@@ -62,10 +63,11 @@ public class HibernateTestCase {
 		File myPath = new File( myUrl.getFile() );
 		// navigate back to '/target'
 		File targetDir = myPath
-				.getParentFile()  // target/test-classes/org/elasticsearch/orm/hibernate
-				.getParentFile()  // target/test-classes/org/elasticsearch/orm
-				.getParentFile()  // target/test-classes/org/elasticsearch
-				.getParentFile()  // target/test-classes/org/
+				.getParentFile()  // target/test-classes/fr/pilato/hibernate/plugins/elasticsearch
+				.getParentFile()  // target/test-classes/fr/pilato/hibernate/plugins
+				.getParentFile()  // target/test-classes/fr/pilato/hibernate
+				.getParentFile()  // target/test-classes/fr/pilato
+				.getParentFile()  // target/test-classes/fr
 				.getParentFile()  // target/test-classes/
 				.getParentFile(); // target
 
@@ -90,9 +92,9 @@ public class HibernateTestCase {
 
 			// Activate automatic indexing with ES
 			cfg.setProperty("hibernate.search.autoregister_listeners", "false");
-			cfg.setListener("post-delete", "org.elasticsearch.orm.hibernate.ElasticSearchEventListenerFactory");
-			cfg.setListener("post-update", "org.elasticsearch.orm.hibernate.ElasticSearchEventListenerFactory");
-			cfg.setListener("post-insert", "org.elasticsearch.orm.hibernate.ElasticSearchEventListenerFactory");
+			cfg.setListener("post-delete", "fr.pilato.hibernate.plugins.elasticsearch.ElasticSearchEventListenerFactory");
+			cfg.setListener("post-update", "fr.pilato.hibernate.plugins.elasticsearch.ElasticSearchEventListenerFactory");
+			cfg.setListener("post-insert", "fr.pilato.hibernate.plugins.elasticsearch.ElasticSearchEventListenerFactory");
 			
 			SessionFactory sf = cfg.buildSessionFactory();
 			session = sf.openSession();

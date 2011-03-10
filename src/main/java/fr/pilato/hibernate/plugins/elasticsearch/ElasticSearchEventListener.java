@@ -1,4 +1,4 @@
-package org.elasticsearch.orm.hibernate;
+package fr.pilato.hibernate.plugins.elasticsearch;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
@@ -13,7 +13,6 @@ import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
-import org.elasticsearch.orm.hibernate.annotations.ESIndexed;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.event.PostDeleteEvent;
 import org.hibernate.event.PostDeleteEventListener;
@@ -23,6 +22,8 @@ import org.hibernate.event.PostUpdateEvent;
 import org.hibernate.event.PostUpdateEventListener;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.util.ReflectHelper;
+
+import fr.pilato.hibernate.plugins.elasticsearch.annotations.ESIndexed;
 
 /**
  * ElasticSearch Hibernate Listener implementation :

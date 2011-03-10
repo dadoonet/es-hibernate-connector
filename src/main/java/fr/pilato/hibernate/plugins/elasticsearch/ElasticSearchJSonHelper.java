@@ -1,4 +1,4 @@
-package org.elasticsearch.orm.hibernate;
+package fr.pilato.hibernate.plugins.elasticsearch;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.safeJsonBuilder;
 

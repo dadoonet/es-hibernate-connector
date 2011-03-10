@@ -1,4 +1,4 @@
-package org.elasticsearch.orm.hibernate;
+package fr.pilato.hibernate.plugins.elasticsearch;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -1,4 +1,4 @@
-package org.elasticsearch.orm.hibernate;
+package fr.pilato.hibernate.plugins.elasticsearch;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
@@ -10,9 +10,10 @@ import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
-import org.elasticsearch.orm.hibernate.testcase1.EntityMaker;
-import org.elasticsearch.orm.hibernate.testcase1.SimpleEntity;
 import org.junit.Test;
+
+import fr.pilato.hibernate.plugins.elasticsearch.ElasticSearchJacksonHibernateModule;
+import fr.pilato.hibernate.plugins.elasticsearch.testcase1.EntityMaker;
 
 /**
  * @author PILATO

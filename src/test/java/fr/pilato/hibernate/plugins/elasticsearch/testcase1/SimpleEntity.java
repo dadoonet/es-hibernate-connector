@@ -1,4 +1,4 @@
-package org.elasticsearch.orm.hibernate.testcase1;
+package fr.pilato.hibernate.plugins.elasticsearch.testcase1;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,8 +11,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.elasticsearch.orm.hibernate.annotations.ESIndexed;
 import org.hibernate.annotations.Cascade;
+
+import fr.pilato.hibernate.plugins.elasticsearch.annotations.ESIndexed;
 
 @Entity
 @ESIndexed

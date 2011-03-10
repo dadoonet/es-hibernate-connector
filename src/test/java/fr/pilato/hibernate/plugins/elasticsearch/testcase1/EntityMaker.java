@@ -1,4 +1,4 @@
-package org.elasticsearch.orm.hibernate.testcase1;
+package fr.pilato.hibernate.plugins.elasticsearch.testcase1;
 
 public class EntityMaker {
 	

@@ -1,4 +1,4 @@
-package org.elasticsearch.orm.hibernate.annotations;
+package fr.pilato.hibernate.plugins.elasticsearch.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

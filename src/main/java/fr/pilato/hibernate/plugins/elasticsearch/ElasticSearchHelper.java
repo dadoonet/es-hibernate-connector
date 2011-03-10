@@ -1,4 +1,4 @@
-package org.elasticsearch.orm.hibernate;
+package fr.pilato.hibernate.plugins.elasticsearch;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -13,7 +13,8 @@ import org.codehaus.jackson.map.SerializationConfig;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.orm.hibernate.annotations.ESIndexed;
+
+import fr.pilato.hibernate.plugins.elasticsearch.annotations.ESIndexed;
 
 /**
  * ElasticSearch Hibernate Listener implementation : <br>

@@ -35,7 +35,7 @@
    <!-- Limit categories -->
    <!-- ================ -->
 
-   <category name="org.elasticsearch.orm.hibernate">
+   <category name="fr.pilato.hibernate.plugins.elasticsearch">
      <priority value="DEBUG" />
    </category>
    

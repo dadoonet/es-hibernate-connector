@@ -1,19 +1,61 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.elasticsearch.plugins</groupId>
+	<groupId>fr.pilato.hibernate.plugins</groupId>
 	<artifactId>es-hibernate-connector</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
 	<name>Hibernate to ElasticSearch Connector</name>
 	<description>Make your Hibernate Search more Elastic !</description>
+	<url>https://github.com/dadoonet/es-hibernate-connector/wiki</url>
+	
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	
+	<scm>
+		<connection>git://github.com/dadoonet/es-hibernate-connector.git</connection>
+		<developerConnection>git@github.com:dadoonet/es-hibernate-connector.git</developerConnection>
+		<url>https://github.com/dadoonet/es-hibernate-connector</url>
+	</scm>
 
+	<inceptionYear>2011</inceptionYear>
+	<developers>
+		<developer>
+			<id>dadoonet</id>
+			<name>David Pilato</name>
+			<email>david+github@pilato.fr</email>
+		</developer>
+	</developers>
+	
 	<properties>
 		<elasticsearch.version>0.15.2</elasticsearch.version>
 		<hibernate.version>3.6.1.Final</hibernate.version>
 		<jackson.version>1.7.4</jackson.version>
 	</properties>
 
-	<repositories>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>2.3.2</version>
+					<configuration>
+						<showDeprecation>true</showDeprecation>
+						<showWarnings>true</showWarnings>
+						<source>1.6</source>
+						<target>1.6</target>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<!-- repositories>
 		<repository>
 			<id>sonatype-releases</id>
 			<name>Miroir Sonatype</name>
@@ -23,7 +65,7 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
-	</repositories>
+	</repositories-->
 	
 	<dependencies>
 		<dependency>
