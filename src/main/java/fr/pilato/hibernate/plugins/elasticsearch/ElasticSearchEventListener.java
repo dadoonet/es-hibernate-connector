@@ -112,7 +112,7 @@ public class ElasticSearchEventListener implements
 		final Object entity = event.getEntity();
 		if (isEntityIndexed(entity)) {
 			if (log.isDebugEnabled()) log.debug("Processing Delete event on " + getEntityName(entity));
-//			ElasticSearchHelper.removeElastic(client, entity);
+			ElasticSearchHelper.removeElastic(client, entity);
 		}
 	}
 
