@@ -1,19 +1,18 @@
 package org.elasticsearch.orm.hibernate;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+
+import javax.persistence.Id;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.elasticsearch.common.jackson.annotate.JsonTypeInfo.Id;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.orm.hibernate.annotations.ESField;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.orm.hibernate.annotations.ESIndexed;
 
 /**
@@ -21,94 +20,91 @@ import org.elasticsearch.orm.hibernate.annotations.ESIndexed;
  * Supported Annotations (and properties) :
  * <ul>
  * <li>ESIndexed(indexName=)
- * <li>ESField()
- * <li>Id()
  * </ul>
  * 
  * @see ESIndexed
- * @see ESField
- * @see Id
  * @author David Pilato
  */
 public class ElasticSearchHelper {
 
 	private static final Log log = LogFactory.getLog(ElasticSearchHelper.class);
 
-	private static String printEntity(Object entity) {
-		if (entity == null) return "null";
-		return "(" + entity.getClass().getSimpleName() + ") " + entity;
-	}
-	
-	public static XContentBuilder entityToJSon(XContentBuilder xcontent,
-			Object entity) {
-		log.debug("Working on " + printEntity(entity) + " : current JSon = " + ElasticSearchJSonHelper.printIndex(xcontent));
-		
+	public static void pushElastic(Client client, Object entity) {
 		if (entity == null)
 			throw new RuntimeException(
 					"Trying to index a null entity ? What a strange idea !");
-
-		Collection<Field> fields = getAllFieldsAnnotationRecursive(entity
-				.getClass());
-		
-		if (fields.isEmpty()) {
-			try {
-				log.debug(".value(" + printEntity(entity) + ") on " + xcontent);
-				xcontent = xcontent.value(entity);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else {
-			xcontent = ElasticSearchJSonHelper.startIndex(xcontent);
-			for (Iterator<Field> iterator = fields.iterator(); iterator.hasNext();) {
-				Field field = iterator.next();
-				String fieldName = field.getName();
-				Object value = getMemberValue(entity, fieldName);
-
-				if (value instanceof Collection<?>) {
-					// Seems that we have a Collection here !
-					Collection<?> col = (Collection<?>) value;
-
-					if (!col.isEmpty()) {
-						xcontent = ElasticSearchJSonHelper.startArray(xcontent,
-								fieldName);
-						for (Iterator<?> itCol = col.iterator(); itCol.hasNext();) {
-							Object object = itCol.next();
-
-							xcontent = entityToJSon(xcontent, object);
-						}
-						xcontent = ElasticSearchJSonHelper.stopArray(xcontent);
-					}
-				} else
-					if (value instanceof Map<?, ?>) {
-						// Seems that we have a Collection here !
-						Map<?, ?> map = (Map<?, ?>) value;
-						Collection<?> col = (Collection<?>) map.values();
-
-						if (!col.isEmpty()) {
-							xcontent = ElasticSearchJSonHelper.startArray(xcontent,
-									fieldName);
-							for (Iterator<?> itCol = col.iterator(); itCol.hasNext();) {
-								Object object = itCol.next();
-
-								xcontent = entityToJSon(xcontent, object);
-							}
-							xcontent = ElasticSearchJSonHelper.stopArray(xcontent);
-						}
-					}			
-					else
-				{
-					xcontent = ElasticSearchJSonHelper.addIndex(xcontent, value,
-							field);
-				}
-			}
-
-			xcontent = ElasticSearchJSonHelper.stopIndex(xcontent);
-			
+		if (client == null) {
+			log.error("Trying to push index to a non existing client ? Bad idea !");
+			return;
 		}
-		
 
-		return xcontent;
+		String indexName = getEntityIndexName(entity);
+		String entityName = getEntityName(entity);
+		String documentId = getDocumentId(entity);
+
+		if (log.isDebugEnabled())
+			log.debug("Trying to prepare EntityBuilder for " + indexName + "/"
+					+ entityName + "/" + documentId);
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		mapper.registerModule(new ElasticSearchJacksonHibernateModule());
+		
+		mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, true);
+		mapper.configure(SerializationConfig.Feature.AUTO_DETECT_FIELDS, true);
+		mapper.configure(SerializationConfig.Feature.AUTO_DETECT_GETTERS, false);
+		mapper.configure(SerializationConfig.Feature.AUTO_DETECT_IS_GETTERS, false);
+		mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, false);
+
+		try {
+			String result = mapper.writeValueAsString(entity);
+			if (log.isDebugEnabled())
+				log.debug(" - Entity will be indexed as "
+						+ result);
+			
+			IndexResponse response = client
+					.prepareIndex(indexName, entityName, documentId)
+					.setSource(result).execute().actionGet();
+
+			if (log.isDebugEnabled() && response != null)
+				log.debug(" - Entity succesfully indexed...");
+			if (response == null)
+				log.warn("Unable to index entity " + entityName + " : " + entity);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public static void removeElastic(Client client, Object entity) {
+		if (entity == null)
+			throw new RuntimeException(
+					"Trying to remove a null entity ? What a strange idea !");
+		if (client == null) {
+			log.error("Trying to remove an index to a non existing client ? Bad idea !");
+			return;
+		}
+
+		String indexName = getEntityIndexName(entity);
+		String entityName = getEntityName(entity);
+		String documentId = getDocumentId(entity);
+
+		if (log.isDebugEnabled())
+			log.debug("Trying to remove entity " + indexName + "/" + entityName
+					+ "/" + documentId);
+		DeleteResponse response = client
+				.prepareDelete(indexName, entityName, documentId).execute()
+				.actionGet();
+
+		// Just for debugging purpose
+		if (log.isDebugEnabled() && response != null) {
+			if (response.isNotFound())
+				log.debug(" - Entity was not found...");
+			else
+				log.debug(" - Entity successfully removed...");
+		}
+		if (response == null)
+			log.warn("Unable to remove entity " + entityName + " : " + entity);
 	}
 
 	private static Object getMemberValue(Object bean, String field) {
@@ -121,43 +117,120 @@ public class ElasticSearchHelper {
 		return value;
 	}
 
+	private static String getEntityName(Object entity) {
+		if (entity == null)
+			return null;
+		return entity.getClass().getSimpleName();
+	}
+
 	/**
-	 * Get all the fields annoted by Field
+	 * Get the index name
 	 * 
-	 * @param clazz
+	 * @param entity
 	 * @return
 	 */
-	private static Collection<Field> getAllFieldsAnnotation(Class<?> clazz) {
-		Collection<Field> returnFields = new ArrayList<Field>();
+	private static String getEntityIndexName(Object entity) {
+		Class<?> clazz = entity.getClass();
+		ESIndexed annotation = clazz.getAnnotation(ESIndexed.class);
+
+		if (annotation != null) {
+			return annotation.indexName().toLowerCase();
+		} else {
+			// Entity not annoted ! What the hell ????
+			throw new RuntimeException("Entity is not annoted ! " + entity);
+		}
+	}
+
+	/**
+	 * Get the document id
+	 * 
+	 * @param entity
+	 *            Entity
+	 * @return
+	 */
+	private static String getDocumentId(Object entity) {
+		Class<?> clazz = entity.getClass();
+
+		String anno = findIdAnnotation(clazz);
+
+		if (anno == null) {
+			// Oh oh !!!! Big trouble !
+			throw new RuntimeException(
+					"Cannot find any Id or DocumentId annotation for "
+							+ clazz.getName());
+		}
+
+		// Now, we need to get the value of this field
+		Object value = getMemberValue(entity, anno);
+
+		if (value == null)
+			throw new RuntimeException(
+					"Cannont index an entity without a correct Id");
+
+		// We expect that toString() will return the Id
+		return value.toString();
+	}
+
+	/**
+	 * Get the document id
+	 * 
+	 * @param clazz
+	 *            Annoted Class
+	 * @return
+	 */
+	private static String findIdAnnotation(Class<?> clazz) {
 		if (clazz == null)
-			return returnFields;
+			return null;
 		Field[] fields = clazz.getDeclaredFields();
 		for (int i = 0; i < fields.length; i++) {
-			Annotation anno = (Annotation) fields[i]
-					.getAnnotation(ESField.class);
+			Annotation anno = (Annotation) fields[i].getAnnotation(Id.class);
 
 			if (anno != null) {
-				returnFields.add(fields[i]);
+				return fields[i].getName();
 			}
 		}
 
-		return returnFields;
+		// We will look in parent classes
+		return findIdAnnotation(clazz.getSuperclass());
 	}
 
-	/**
-	 * Get all the fields annoted by Field even in Parents !
-	 * 
-	 * @param clazz
-	 * @return
-	 */
-	private static Collection<Field> getAllFieldsAnnotationRecursive(
-			Class<?> clazz) {
-		Collection<Field> returnFields = new ArrayList<Field>();
-		returnFields.addAll(getAllFieldsAnnotation(clazz));
-		if (clazz != null)
-			returnFields.addAll(getAllFieldsAnnotationRecursive(clazz
-					.getSuperclass()));
-		return returnFields;
-	}
+//	/**
+//	 * Get all the fields annoted by Field
+//	 * 
+//	 * @param clazz
+//	 * @return
+//	 */
+//	private static Collection<Field> getAllFieldsAnnotation(Class<?> clazz) {
+//		Collection<Field> returnFields = new ArrayList<Field>();
+//		if (clazz == null)
+//			return returnFields;
+//		Field[] fields = clazz.getDeclaredFields();
+//		for (int i = 0; i < fields.length; i++) {
+//			Annotation anno = (Annotation) fields[i]
+//					.getAnnotation(ESField.class);
+//
+//			if (anno != null) {
+//				returnFields.add(fields[i]);
+//			}
+//		}
+//
+//		return returnFields;
+//	}
+
+//	/**
+//	 * Get all the fields annoted by Field even in Parents !
+//	 * 
+//	 * @param clazz
+//	 * @return
+//	 */
+//	private static Collection<Field> getAllFieldsAnnotationRecursive(
+//			Class<?> clazz) {
+//		Collection<Field> returnFields = new ArrayList<Field>();
+//		returnFields.addAll(getAllFieldsAnnotation(clazz));
+//		if (clazz != null)
+//			returnFields.addAll(getAllFieldsAnnotationRecursive(clazz
+//					.getSuperclass()));
+//		return returnFields;
+//	}
 
 }

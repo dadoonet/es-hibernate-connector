@@ -1,45 +1,84 @@
 package org.elasticsearch.orm.hibernate;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.safeJsonBuilder;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.elasticsearch.orm.hibernate.testcase1.EntityMaker;
+import org.elasticsearch.orm.hibernate.testcase1.SimpleEntity;
 import org.junit.Test;
 
 /**
- * @author David Pilato
+ * @author PILATO
  *
  */
 public class JSonBuilderTest {
-	private static final Log log = LogFactory.getLog(JSonBuilderTest.class);
-	
-	@Test
-	public void testSimpleEntityThatFails() throws IOException {
-		SimpleEntity entity = new SimpleEntity();
-		entity.setField("Value for field");
 
-		entity.addToStringsfield("Value for stringsfield");
+	private String generateJsonFromEntity(Object entity, String expected) {
+		ObjectMapper mapper = new ObjectMapper();
 
-		XContentBuilder xcontent = ElasticSearchHelper.entityToJSon(null, entity);
+//		mapper.getSerializationConfig().setAnnotationIntrospector(new ElasticSearchHibernateAnnotationIntrospector());
+		mapper.registerModule(new ElasticSearchJacksonHibernateModule());
 		
-		log.debug("End of test : " + ElasticSearchJSonHelper.printIndex(xcontent));
+		mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
+		mapper.configure(SerializationConfig.Feature.AUTO_DETECT_FIELDS, true);
+		mapper.configure(SerializationConfig.Feature.AUTO_DETECT_GETTERS, false);
+		mapper.configure(SerializationConfig.Feature.AUTO_DETECT_IS_GETTERS, false);
+		mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+
+		String s = null;
+		try {
+			s = mapper.writeValueAsString(entity);
+		} catch (JsonGenerationException e) {
+			fail("JsonGenerationException : " + e.getMessage());
+		} catch (JsonMappingException e) {
+			fail("JsonMappingException : " + e.getMessage());
+		} catch (IOException e) {
+			fail("IOException : " + e.getMessage());
+		}
+		
+		assertNotNull(s);
+		
+		if (expected != null) assertEquals(expected, s);
+
+		System.out.println(s);
+		return s;
 	}
 	
 	@Test
-	public void testSimpleEntityThatSuccess() throws IOException {
-		XContentBuilder xcontent = null;
-		xcontent = safeJsonBuilder();
-		xcontent = xcontent.startObject();
-		xcontent = xcontent.field("field", "Value for field");
-		xcontent = xcontent.startArray("stringsfield");
-		xcontent = xcontent.value("Value for stringsfield");
-		xcontent = xcontent.endArray();
-		xcontent = xcontent.endObject();
-		
-		log.debug("End of test : " + ElasticSearchJSonHelper.printIndex(xcontent));
+	public void testModelEntity1() throws IOException {
+		generateJsonFromEntity(EntityMaker.getEntity1(), null);
+	}
+	
+	@Test
+	public void testModelEntity2() throws IOException {
+		generateJsonFromEntity(EntityMaker.getEntity2(), null);
+	}
+	
+	@Test
+	public void testModelEntity3_1() throws IOException {
+		generateJsonFromEntity(EntityMaker.getEntity3_1(), null);
+	}
+	
+	@Test
+	public void testModelEntity3_2() throws IOException {
+		generateJsonFromEntity(EntityMaker.getEntity3_2(), null);
+	}
+	
+	@Test
+	public void testModelEntity4_1() throws IOException {
+		generateJsonFromEntity(EntityMaker.getEntity4_1(), null);
+	}
+	
+	@Test
+	public void testModelEntity4_2() throws IOException {
+		generateJsonFromEntity(EntityMaker.getEntity4_2(), null);
 	}
 	
 }
