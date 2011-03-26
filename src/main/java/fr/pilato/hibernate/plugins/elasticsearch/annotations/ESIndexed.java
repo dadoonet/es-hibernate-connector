@@ -6,13 +6,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention( RetentionPolicy.RUNTIME )
-@Target( ElementType.TYPE )
-@Documented
 /**
  * Indicate that the entity will be indexed by Elastic Search
  * @author David Pilato
  */
+@Retention( RetentionPolicy.RUNTIME )
+@Target( ElementType.TYPE )
+@Documented
 public @interface ESIndexed {
 	/**
 	 * @return the index Name used by Elastic (Default : "default")

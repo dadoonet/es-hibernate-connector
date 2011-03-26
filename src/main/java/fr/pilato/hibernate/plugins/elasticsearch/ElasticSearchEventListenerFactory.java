@@ -31,7 +31,7 @@ public class ElasticSearchEventListenerFactory implements
 
 	private static ElasticSearchEventListener listener;
 	
-	private static ElasticSearchEventListener getInstance() {
+	public static ElasticSearchEventListener getInstance() {
 		if (listener == null) {
 			listener = new ElasticSearchEventListener(); 
 		}
@@ -64,8 +64,7 @@ public class ElasticSearchEventListenerFactory implements
 	public void cleanup() {
 		if (listener != null) {
 			if (log.isDebugEnabled()) log.debug("Stopping Elastic Search Event Listener");
-
-			// TODO Stop ES node ?
+			listener.cleanup();
 			listener = null;
 		}
 	}

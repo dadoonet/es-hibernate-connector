@@ -130,7 +130,7 @@ public class ElasticSearchHelper {
 	 * @param entity
 	 * @return
 	 */
-	public static String getEntityIndexName(Object entity) {
+	private static String getEntityIndexName(Object entity) {
 		Class<?> clazz = entity.getClass();
 		ESIndexed annotation = clazz.getAnnotation(ESIndexed.class);
 

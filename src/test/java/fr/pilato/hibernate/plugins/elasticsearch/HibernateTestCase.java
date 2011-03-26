@@ -68,7 +68,7 @@ public class HibernateTestCase {
 				.getParentFile()  // target/test-classes/fr/pilato/hibernate
 				.getParentFile()  // target/test-classes/fr/pilato
 				.getParentFile()  // target/test-classes/fr
-				.getParentFile()  // target/test-classes/
+				.getParentFile()  // target/test-classes
 				.getParentFile(); // target
 
 		// Removing old test files

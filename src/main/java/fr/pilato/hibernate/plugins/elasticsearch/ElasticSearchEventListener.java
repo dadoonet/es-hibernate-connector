@@ -14,6 +14,8 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.event.Destructible;
+import org.hibernate.event.Initializable;
 import org.hibernate.event.PostDeleteEvent;
 import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PostInsertEvent;
@@ -40,10 +42,10 @@ import fr.pilato.hibernate.plugins.elasticsearch.annotations.ESIndexed;
  * @author David Pilato
  */
 @SuppressWarnings("serial")
-public class ElasticSearchEventListener implements 
+public class ElasticSearchEventListener implements Initializable,
 		PostDeleteEventListener,
 		PostInsertEventListener, 
-		PostUpdateEventListener
+		PostUpdateEventListener, Destructible
 		{
 
 	private static final Log log = LogFactory.getLog(ElasticSearchEventListener.class);
@@ -55,7 +57,7 @@ public class ElasticSearchEventListener implements
 
 	private boolean used = false;
 
-	protected boolean initialize(Configuration cfg) {
+	public void initialize(Configuration cfg) {
 		// We need to configure ES to handle HSearch annotations
 		if (log.isDebugEnabled()) log.debug( "Elastic Search Starting Configuration" );
 
@@ -80,8 +82,6 @@ public class ElasticSearchEventListener implements
 		}
 
 		if (log.isDebugEnabled()) log.debug( "Elastic Search Event Listener " + (used ? "activated" : "deactivated") );
-		
-		return used;
 	}
 
 	/**
@@ -161,4 +161,27 @@ public class ElasticSearchEventListener implements
 		if (entity == null) return null;
 		return entity.getClass().getSimpleName();
 	}
+
+	public void cleanup() {
+		log.info("************** Closing HB ES Listener *******************");
+		// TODO Closing client and node ?
+	}
+
+	public Node getNode() {
+		return node;
+	}
+
+	public void setNode(Node node) {
+		this.node = node;
+	}
+
+	public Client getClient() {
+		return client;
+	}
+
+	public void setClient(Client client) {
+		this.client = client;
+	}
+	
+	
 }
