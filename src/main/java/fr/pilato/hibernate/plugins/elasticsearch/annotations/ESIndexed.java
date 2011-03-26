@@ -8,11 +8,13 @@ import java.lang.annotation.Target;
 
 /**
  * Indicate that the entity will be indexed by Elastic Search
+ * @deprecated by Annotations from OSEM Elastic Annotations
  * @author David Pilato
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( ElementType.TYPE )
 @Documented
+@Deprecated
 public @interface ESIndexed {
 	/**
 	 * @return the index Name used by Elastic (Default : "default")
