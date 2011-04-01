@@ -59,7 +59,7 @@ public class HibernateTestCase {
 		System.setProperty("es.config", myConfigUrl.getPath());
 
 		// We can start a node
-		node = nodeBuilder().build();
+		node = nodeBuilder().client(true).build();
 		
 //		ImmutableMap<String, String> settings = node.settings().getAsMap();
 //		
