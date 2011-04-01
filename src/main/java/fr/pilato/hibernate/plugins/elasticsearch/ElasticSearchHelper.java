@@ -30,6 +30,11 @@ public class ElasticSearchHelper {
 
 	private static final Log log = LogFactory.getLog(ElasticSearchHelper.class);
 
+	/**
+	 * Push an entity to Elastic
+	 * @param client Elastic Search Client
+	 * @param entity Entity to remove
+	 */
 	public static void pushElastic(Client client, Object entity) {
 		if (entity == null)
 			throw new RuntimeException(
@@ -72,11 +77,15 @@ public class ElasticSearchHelper {
 			if (response == null)
 				log.warn("Unable to index entity " + entityName + " : " + entity);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("Unable to push entity into Elastic Search...");
 		}
 	}
 
+	/**
+	 * Remove an entity from Elastic
+	 * @param client Elastic Search Client
+	 * @param entity Entity to remove
+	 */
 	public static void removeElastic(Client client, Object entity) {
 		if (entity == null)
 			throw new RuntimeException(
@@ -118,6 +127,11 @@ public class ElasticSearchHelper {
 		return value;
 	}
 
+	/**
+	 * Shortcut to entity.getClass().getSimpleName()
+	 * @param entity Entity
+	 * @return simple Name for entity class
+	 */
 	private static String getEntityName(Object entity) {
 		if (entity == null)
 			return null;
@@ -125,10 +139,10 @@ public class ElasticSearchHelper {
 	}
 
 	/**
-	 * Get the index name
-	 * 
-	 * @param entity
-	 * @return
+	 * Get the index name as it was declared in ESIndexed annotation
+	 * for a given entity
+	 * @param entity Entity where to find index name
+	 * @return The index name
 	 */
 	private static String getEntityIndexName(Object entity) {
 		Class<?> clazz = entity.getClass();

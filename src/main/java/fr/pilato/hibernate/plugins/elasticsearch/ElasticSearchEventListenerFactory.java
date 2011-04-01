@@ -14,9 +14,7 @@ import org.hibernate.event.PostUpdateEventListener;
 
 /**
  * <b>ElasticSearch Hibernate Listener implementation</b><br>
- * You can configure the cluster name to connect on by specifying <i>es.cluster.name</i> system property.<br>
- * e.g. -Des.cluster.name=MYCLUSTER<br>
- * If the property is undefined, ELASTICSEARCH will be used as default cluster name.
+ * You can configure elasticSearch by specifying <i>es.config</i> file.
  * @author David Pilato
  */
 @SuppressWarnings("serial")

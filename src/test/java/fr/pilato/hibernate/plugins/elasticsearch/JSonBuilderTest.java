@@ -31,7 +31,7 @@ public class JSonBuilderTest {
 		mapper.configure(SerializationConfig.Feature.AUTO_DETECT_FIELDS, true);
 		mapper.configure(SerializationConfig.Feature.AUTO_DETECT_GETTERS, false);
 		mapper.configure(SerializationConfig.Feature.AUTO_DETECT_IS_GETTERS, false);
-		mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+		mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, false);
 
 		String s = null;
 		try {
@@ -48,38 +48,44 @@ public class JSonBuilderTest {
 		
 		if (expected != null) assertEquals(expected, s);
 
-		System.out.println(s);
+//		System.out.println(s);
 		return s;
 	}
 	
 	@Test
 	public void testModelEntity1() throws IOException {
-		generateJsonFromEntity(EntityMaker.getEntity1(), null);
+		String expected = "{\"field\":null,\"sentities\":[]}";
+		generateJsonFromEntity(EntityMaker.getEntity1(), expected);
 	}
 	
 	@Test
 	public void testModelEntity2() throws IOException {
-		generateJsonFromEntity(EntityMaker.getEntity2(), null);
+		String expected = "{\"field\":\"my field 1\",\"sentities\":[]}";
+		generateJsonFromEntity(EntityMaker.getEntity2(), expected);
 	}
 	
 	@Test
 	public void testModelEntity3_1() throws IOException {
-		generateJsonFromEntity(EntityMaker.getEntity3_1(), null);
+		String expected = "{\"field\":\"my field 1\",\"sentities\":[{\"value\":null}]}";
+		generateJsonFromEntity(EntityMaker.getEntity3_1(), expected);
 	}
 	
 	@Test
 	public void testModelEntity3_2() throws IOException {
-		generateJsonFromEntity(EntityMaker.getEntity3_2(), null);
+		String expected = "{\"field\":\"my field 1\",\"sentities\":[{\"value\":\"my child 1 field\"}]}";
+		generateJsonFromEntity(EntityMaker.getEntity3_2(), expected);
 	}
 	
 	@Test
 	public void testModelEntity4_1() throws IOException {
-		generateJsonFromEntity(EntityMaker.getEntity4_1(), null);
+		String expected = "{\"field\":\"my field 1\",\"sentities\":[{\"value\":null},{\"value\":null}]}";
+		generateJsonFromEntity(EntityMaker.getEntity4_1(), expected);
 	}
 	
 	@Test
 	public void testModelEntity4_2() throws IOException {
-		generateJsonFromEntity(EntityMaker.getEntity4_2(), null);
+		String expected = "{\"field\":\"my field 1\",\"sentities\":[{\"value\":\"my child 1 field\"},{\"value\":\"my child 2 field\"}]}";
+		generateJsonFromEntity(EntityMaker.getEntity4_2(), expected);
 	}
 	
 }

@@ -35,7 +35,9 @@ import fr.pilato.hibernate.plugins.elasticsearch.annotations.ESIndexed;
  * <li>Id()
  * <li>DocumentId()
  * </ul>
- * Set <i>es.client.only</i> system property to false if you want to start a real node (for tests)
+ * Set <i>es.client.only</i> system property to false if you want to start a real node (for tests)<br>
+ * Use <i>es.config</i> system property to define your node configuration or add a config
+ * file in the classpath
  * @see Indexed
  * @see DocumentId 
  * @see Id 
@@ -51,7 +53,6 @@ public class ElasticSearchEventListener implements Initializable,
 	private static final Log log = LogFactory.getLog(ElasticSearchEventListener.class);
 
 	private Node node = null;
-	private Client client = null;
 
 	private Map<String, Class<?>> entityMapper = new HashMap<String, Class<?>>();
 
@@ -96,12 +97,14 @@ public class ElasticSearchEventListener implements Initializable,
 		String strIsClientOnly = System.getProperty("es.client.only");
 		if (strIsClientOnly != null && strIsClientOnly.toLowerCase().equals("false")) isClientOnly = false; 
 		
-		log.info( "Starting Client" + (isClientOnly ? " Only" : " and Server") + " Node for Elastic Search..." );
+		log.info( "Starting Node " + (isClientOnly ? "(Client Only)" : "(Full)") + " for Elastic Search..." );
 		
 		NodeBuilder nodeBuilder = nodeBuilder().client(isClientOnly);
-		
 		node = nodeBuilder.node();
-		client = node.client();
+
+		log.info( "Node [" + node.settings().get("name") + "] for [" + node.settings().get("cluster.name") + "] cluster started..." );
+		log.info( "  - data : " + node.settings().get("path.data") );
+		log.info( "  - logs : " + node.settings().get("path.logs") );
 	}
 
 	public boolean isUsed() {
@@ -112,7 +115,9 @@ public class ElasticSearchEventListener implements Initializable,
 		final Object entity = event.getEntity();
 		if (isEntityIndexed(entity)) {
 			if (log.isDebugEnabled()) log.debug("Processing Delete event on " + getEntityName(entity));
+			Client client = node.client();
 			ElasticSearchHelper.removeElastic(client, entity);
+			client.close();
 		}
 	}
 
@@ -120,7 +125,9 @@ public class ElasticSearchEventListener implements Initializable,
 		final Object entity = event.getEntity();
 		if (isEntityIndexed(entity)) {
 			if (log.isDebugEnabled()) log.debug("Processing Insert event on " + getEntityName(entity));
+			Client client = node.client();
 			ElasticSearchHelper.pushElastic(client, entity);
+			client.close();
 		}
 	}
 
@@ -128,7 +135,9 @@ public class ElasticSearchEventListener implements Initializable,
 		final Object entity = event.getEntity();
 		if (isEntityIndexed(entity)) {
 			if (log.isDebugEnabled()) log.debug("Processing Insert event on " + getEntityName(entity));
+			Client client = node.client();
 			ElasticSearchHelper.pushElastic(client, entity);
+			client.close();
 		}
 	}
 	
@@ -163,25 +172,26 @@ public class ElasticSearchEventListener implements Initializable,
 	}
 
 	public void cleanup() {
-		log.info("************** Closing HB ES Listener *******************");
-		// TODO Closing client and node ?
+		log.info("Closing Elastic Search Plugin...");
+		if (node != null) node.close();
 	}
 
-	public Node getNode() {
+	/**
+	 * Get the Elastic Search current node
+	 * @return Current ES node
+	 */
+	public Node getESNode() {
 		return node;
 	}
 
-	public void setNode(Node node) {
-		this.node = node;
+	/**
+	 * Get the Elastic Search current client
+	 * @deprecated Don't use it anymore. Use {@link #getESNode()}.client() and 
+	 * don't forget to close the client after use...
+	 * @return an ES client
+	 */
+	@Deprecated
+	public Client getESClient() {
+		return node.client();
 	}
-
-	public Client getClient() {
-		return client;
-	}
-
-	public void setClient(Client client) {
-		this.client = client;
-	}
-	
-	
 }

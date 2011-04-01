@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.net.URL;
 
+import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
@@ -17,8 +18,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import fr.pilato.hibernate.plugins.elasticsearch.testcase1.ChildEntity;
@@ -29,10 +30,9 @@ public class HibernateTestCase {
 
 	protected static Configuration cfg;
 	protected static Session session;
-
-	private static final String clusterName = "myTestCluster";
+	protected static Node node;
 	
-	static private boolean deleteDirectory(File path) {
+	private static boolean deleteDirectory(File path) {
 	    if( path.exists() ) {
 	      File[] files = path.listFiles();
 	      for(int i=0; i<files.length; i++) {
@@ -47,35 +47,30 @@ public class HibernateTestCase {
 	    return( path.delete() );
 	  }
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeClass
+	public static void setUp() throws Exception {
 		// Setting things for Elastic Search Standalone
-//		System.setProperty("es.index.store.type", "memory");
-		System.setProperty("es.cluster.name", clusterName);
 		System.setProperty("es.client.only", "false");
 		
 		// Let's find target/data dir for tests
 		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-		// get a URL reference to something we now is part of the classpath (us)
-		URL myUrl = contextClassLoader.getResource( HibernateTestCase.class.getName().replace( '.', '/' ) + ".class" );
-		
-		
-		File myPath = new File( myUrl.getFile() );
-		// navigate back to '/target'
-		File targetDir = myPath
-				.getParentFile()  // target/test-classes/fr/pilato/hibernate/plugins/elasticsearch
-				.getParentFile()  // target/test-classes/fr/pilato/hibernate/plugins
-				.getParentFile()  // target/test-classes/fr/pilato/hibernate
-				.getParentFile()  // target/test-classes/fr/pilato
-				.getParentFile()  // target/test-classes/fr
-				.getParentFile()  // target/test-classes
-				.getParentFile(); // target
 
+		URL myConfigUrl = contextClassLoader.getResource( "myconfig/myelasticsearch.yml" );
+		System.setProperty("es.config", myConfigUrl.getPath());
+
+		// We can start a node
+		node = nodeBuilder().build();
+		
+//		ImmutableMap<String, String> settings = node.settings().getAsMap();
+//		
+//		for (String string : settings.keySet()) {
+//			System.out.println(string + " : " + settings.get(string));
+//		}
+		
 		// Removing old test files
-		HibernateTestCase.deleteDirectory( new File( targetDir + "/esdata" ) );
-
-		File indexDir = new File( targetDir, "esdata" );
-		System.setProperty("es.path.data", indexDir.getAbsolutePath());
+		// We ask to the node where are datas
+		String dataDir = node.settings().get("path.data");
+		HibernateTestCase.deleteDirectory( new File(dataDir) );
 
 		// Setting things for Hibernate
 		if (cfg == null) {
@@ -101,17 +96,7 @@ public class HibernateTestCase {
 			SchemaExport export = new SchemaExport( cfg );
 			export.create( true, true );
 		}
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		if (session != null) {
-		     session.close();
-		}
-	}
-	
-	@Test
-	public void doMyTest() {
+		
 		SimpleEntity entity = EntityMaker.getEntity4_2();
 
 		Transaction tx = null;
@@ -126,15 +111,59 @@ public class HibernateTestCase {
 		     if (tx != null) tx.rollback();
 		     fail("Cannot persist entity before running the real Elastic Test : " + e.getMessage());
 		 }
-		 
-		 // So now we have an entity
-		 // We can search for it
-		Node node = null;
-		Client client = null;
 
-		node = nodeBuilder().clusterName(clusterName).node();
-		client = node.client();
+		 node = node.start();
+		 
+		 // Just wait a while for synchronizing the two nodes (HibernateNode and JUnitTestNode)
+		 Thread.sleep(1000);
+	}
+
+	@AfterClass
+	public static void tearDown() throws Exception {
+		if (node != null) {
+			node.close();
+		}
+
+		if (session != null) {
+			session.getSessionFactory().close();
+		    session.close();
+		}
+	}
+
+	@Test
+	public void countEntity() {
+		Client client = node.client();
 	
+		CountResponse response = client.prepareCount("default")
+	        .setQuery(termQuery("value", "child"))
+	        .execute()
+	        .actionGet();
+
+		client.close();
+		
+		assertEquals("We should find one document with this criteria", 1, response.count());
+	}
+
+	@Test
+	public void findEntity() {
+		Client client = node.client();
+	
+		SearchResponse response = client.prepareSearch("default")
+	        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+	        .setQuery(termQuery("value", "child"))
+	        .setFrom(0).setSize(60).setExplain(true)
+	        .execute()
+	        .actionGet();
+
+		client.close();
+		
+		assertEquals("We should find one document with this criteria", 1, response.getHits().getTotalHits());
+	}
+	
+	@Test
+	public void doNotFindEntity() {
+		Client client = node.client();
+		
 		SearchResponse response = client.prepareSearch("default")
 	        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
 	        .setQuery(termQuery("value", "djsfhdhfhifhize"))
@@ -142,15 +171,8 @@ public class HibernateTestCase {
 	        .execute()
 	        .actionGet();
 
-		assertEquals("We should find nothing with this criteria", 0, response.getHits().getTotalHits());
+		client.close();
 		
-		response = client.prepareSearch("default")
-	        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-	        .setQuery(termQuery("value", "child"))
-	        .setFrom(0).setSize(60).setExplain(true)
-	        .execute()
-	        .actionGet();
-
-		assertEquals("We should find one document with this criteria", 1, response.getHits().getTotalHits());
+		assertEquals("We should find nothing with this criteria", 0, response.getHits().getTotalHits());
 	}
 }

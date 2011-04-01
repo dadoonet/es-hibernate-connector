@@ -1,0 +1,15 @@
+# Cluster Settings
+cluster:
+  name: myTestCluster
+
+path:
+  data: ${project.build.directory}/esdata
+  logs: ${project.build.directory}/eslogs
+  work: ${project.build.directory}/eswork
+
+
+# Gateway Settings
+#gateway:
+#  recover_after_nodes: 1
+#  recover_after_time: 5m
+#  expected_nodes: 2
