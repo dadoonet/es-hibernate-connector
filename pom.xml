@@ -34,9 +34,9 @@
 	</developers>
 
 	<properties>
-		<elasticsearch.version>0.15.2</elasticsearch.version>
+		<elasticsearch.version>0.16.0</elasticsearch.version>
 		<hibernate.version>3.6.1.Final</hibernate.version>
-		<jackson.version>1.7.4</jackson.version>
+		<jackson.version>1.8.0</jackson.version>
 	</properties>
 
 	<distributionManagement>
