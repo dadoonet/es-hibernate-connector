@@ -53,6 +53,8 @@ public class ElasticSearchEventListener implements Initializable,
 	private static final Log log = LogFactory.getLog(ElasticSearchEventListener.class);
 
 	private Node node = null;
+	
+	private Client client = null;
 
 	private Map<String, Class<?>> entityMapper = new HashMap<String, Class<?>>();
 
@@ -101,6 +103,7 @@ public class ElasticSearchEventListener implements Initializable,
 		
 		NodeBuilder nodeBuilder = nodeBuilder().client(isClientOnly);
 		node = nodeBuilder.node();
+		client = node.client();
 
 		log.info( "Node [" + node.settings().get("name") + "] for [" + node.settings().get("cluster.name") + "] cluster started..." );
 		log.info( "  - data : " + node.settings().get("path.data") );
@@ -115,9 +118,7 @@ public class ElasticSearchEventListener implements Initializable,
 		final Object entity = event.getEntity();
 		if (isEntityIndexed(entity)) {
 			if (log.isDebugEnabled()) log.debug("Processing Delete event on " + getEntityName(entity));
-			Client client = node.client();
 			ElasticSearchHelper.removeElastic(client, entity);
-			client.close();
 		}
 	}
 
@@ -125,9 +126,7 @@ public class ElasticSearchEventListener implements Initializable,
 		final Object entity = event.getEntity();
 		if (isEntityIndexed(entity)) {
 			if (log.isDebugEnabled()) log.debug("Processing Insert event on " + getEntityName(entity));
-			Client client = node.client();
 			ElasticSearchHelper.pushElastic(client, entity);
-			client.close();
 		}
 	}
 
@@ -135,9 +134,7 @@ public class ElasticSearchEventListener implements Initializable,
 		final Object entity = event.getEntity();
 		if (isEntityIndexed(entity)) {
 			if (log.isDebugEnabled()) log.debug("Processing Insert event on " + getEntityName(entity));
-			Client client = node.client();
 			ElasticSearchHelper.pushElastic(client, entity);
-			client.close();
 		}
 	}
 	
@@ -173,11 +170,14 @@ public class ElasticSearchEventListener implements Initializable,
 
 	public void cleanup() {
 		log.info("Closing Elastic Search Plugin...");
+		if (client != null) client.close();
 		if (node != null) node.close();
 	}
 
 	/**
-	 * Get the Elastic Search current node
+	 * Get the Elastic Search current node.
+	 * <br>If you only need a client, please use {@link #getESClient()} as
+	 * it will managed automatically by es-hb-connector.
 	 * @return Current ES node
 	 */
 	public Node getESNode() {
@@ -186,11 +186,8 @@ public class ElasticSearchEventListener implements Initializable,
 
 	/**
 	 * Get the Elastic Search current client
-	 * @deprecated Don't use it anymore. Use {@link #getESNode()}.client() and 
-	 * don't forget to close the client after use...
 	 * @return an ES client
 	 */
-	@Deprecated
 	public Client getESClient() {
 		return node.client();
 	}

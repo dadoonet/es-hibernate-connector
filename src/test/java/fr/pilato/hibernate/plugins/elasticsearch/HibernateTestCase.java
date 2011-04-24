@@ -31,6 +31,7 @@ public class HibernateTestCase {
 	protected static Configuration cfg;
 	protected static Session session;
 	protected static Node node;
+	protected static Client client;
 	
 	private static boolean deleteDirectory(File path) {
 	    if( path.exists() ) {
@@ -113,6 +114,7 @@ public class HibernateTestCase {
 		 }
 
 		 node = node.start();
+		 client = node.client();
 		 
 		 // Just wait a while for synchronizing the two nodes (HibernateNode and JUnitTestNode)
 		 Thread.sleep(1000);
@@ -120,6 +122,9 @@ public class HibernateTestCase {
 
 	@AfterClass
 	public static void tearDown() throws Exception {
+		if (client != null) {
+			client.close();
+		}
 		if (node != null) {
 			node.close();
 		}
@@ -132,22 +137,16 @@ public class HibernateTestCase {
 
 	@Test
 	public void countEntity() {
-		Client client = node.client();
-	
 		CountResponse response = client.prepareCount("default")
 	        .setQuery(termQuery("value", "child"))
 	        .execute()
 	        .actionGet();
 
-		client.close();
-		
 		assertEquals("We should find one document with this criteria", 1, response.count());
 	}
 
 	@Test
 	public void findEntity() {
-		Client client = node.client();
-	
 		SearchResponse response = client.prepareSearch("default")
 	        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
 	        .setQuery(termQuery("value", "child"))
@@ -155,15 +154,11 @@ public class HibernateTestCase {
 	        .execute()
 	        .actionGet();
 
-		client.close();
-		
 		assertEquals("We should find one document with this criteria", 1, response.getHits().getTotalHits());
 	}
 	
 	@Test
 	public void doNotFindEntity() {
-		Client client = node.client();
-		
 		SearchResponse response = client.prepareSearch("default")
 	        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
 	        .setQuery(termQuery("value", "djsfhdhfhifhize"))
@@ -171,8 +166,6 @@ public class HibernateTestCase {
 	        .execute()
 	        .actionGet();
 
-		client.close();
-		
 		assertEquals("We should find nothing with this criteria", 0, response.getHits().getTotalHits());
 	}
 }
